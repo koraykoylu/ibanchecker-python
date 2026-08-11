@@ -1,0 +1,54 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "ibanchecker"
+version = "0.1.0"
+description = "Official Python client for the ibanchecker.cash IBAN validation API: validate IBANs across 92 countries, extract IBANs from text, and look up SWIFT/BIC codes."
+readme = "README.md"
+requires-python = ">=3.8"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "ibanchecker.cash", email = "api@ibanchecker.cash" }]
+keywords = [
+    "iban",
+    "iban-validation",
+    "iban-checker",
+    "swift",
+    "bic",
+    "sepa",
+    "fintech",
+    "banking",
+    "payments",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Financial and Insurance Industry",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Office/Business :: Financial",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+dependencies = ["requests>=2.25"]
+
+[project.optional-dependencies]
+dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://ibanchecker.cash"
+Documentation = "https://ibanchecker.cash/api-docs"
+"API Reference" = "https://ibanchecker.cash/api-docs"
+"OpenAPI Spec" = "https://ibanchecker.cash/openapi.json"
+Source = "https://github.com/koraykoylu/ibanchecker-python"
+"Issue Tracker" = "https://github.com/koraykoylu/ibanchecker-python/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/ibanchecker"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "README.md", "LICENSE", "CHANGELOG.md", "tests"]
