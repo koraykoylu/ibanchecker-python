@@ -32,14 +32,19 @@ class IbanChecker:
     extract IBANs from free text, look up country format specifications, and
     resolve SWIFT/BIC codes.
 
-    An API key is optional. Without one, requests are limited to 100 per hour
-    per IP. Get a free key at https://ibanchecker.cash/api-docs.
+    ``validate``, ``validate_bulk`` and ``extract`` require an API key; without
+    one they raise ``AuthenticationError``. A free key covers 100 requests a
+    month: get one at https://ibanchecker.cash/api-docs. ``get_format`` and
+    ``lookup_bic`` also work without a key, limited to 100 requests an hour
+    per IP.
 
     Example::
 
+        import os
+
         from ibanchecker import IbanChecker
 
-        client = IbanChecker()  # or IbanChecker("iban_your_key")
+        client = IbanChecker(os.environ["IBANCHECKER_API_KEY"])
         result = client.validate("DE89 3704 0044 0532 0130 00")
         if result:
             print(result.bank_name, result.bic)

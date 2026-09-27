@@ -162,9 +162,28 @@ def test_not_found_raises():
 
 
 def test_rate_limit_raises():
-    session = make_session(429, {"error": "slow down", "error_code": "RATE_LIMITED"})
-    with pytest.raises(RateLimitError):
+    session = make_session(
+        429, {"error": "quota exceeded", "error_code": "QUOTA_EXCEEDED"}
+    )
+    with pytest.raises(RateLimitError) as exc_info:
+        IbanChecker(api_key="iban_test_key", session=session).validate(
+            "DE89370400440532013000"
+        )
+    assert exc_info.value.error_code == "QUOTA_EXCEEDED"
+
+
+def test_missing_key_raises_auth_error():
+    session = make_session(
+        401,
+        {
+            "error": "An API key is required. Get a free key (100 requests a month) at https://ibanchecker.cash/api-docs",
+            "error_code": "UNAUTHORIZED",
+        },
+    )
+    with pytest.raises(AuthenticationError) as exc_info:
         IbanChecker(session=session).validate("DE89370400440532013000")
+    assert exc_info.value.status == 401
+    assert exc_info.value.error_code == "UNAUTHORIZED"
 
 
 def test_auth_error_raises():

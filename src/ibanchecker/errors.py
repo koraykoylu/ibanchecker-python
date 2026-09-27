@@ -26,7 +26,10 @@ class BadRequestError(IbanCheckerError):
 
 
 class AuthenticationError(IbanCheckerError):
-    """The API key is missing, invalid, or inactive (HTTP 401)."""
+    """The API key is missing, invalid, or inactive (HTTP 401).
+
+    Raised by ``validate``, ``validate_bulk`` and ``extract`` when the client
+    was created without an API key."""
 
 
 class NotFoundError(IbanCheckerError):
@@ -34,7 +37,12 @@ class NotFoundError(IbanCheckerError):
 
 
 class RateLimitError(IbanCheckerError):
-    """The hourly rate limit or monthly quota was exceeded (HTTP 429)."""
+    """The monthly quota or the hourly rate limit was exceeded (HTTP 429).
+
+    ``error_code`` is ``"QUOTA_EXCEEDED"`` when a key's monthly quota is used
+    up (it resets on the 1st of the next month, UTC) and
+    ``"RATE_LIMIT_EXCEEDED"`` when keyless format or BIC lookups pass 100
+    requests an hour per IP."""
 
 
 class APIError(IbanCheckerError):
