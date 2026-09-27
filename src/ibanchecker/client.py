@@ -32,11 +32,17 @@ class IbanChecker:
     extract IBANs from free text, look up country format specifications, and
     resolve SWIFT/BIC codes.
 
-    ``validate``, ``validate_bulk`` and ``extract`` require an API key; without
-    one they raise ``AuthenticationError``. A free key covers 100 requests a
-    month: get one at https://ibanchecker.cash/api-docs. ``get_format`` and
-    ``lookup_bic`` also work without a key, limited to 100 requests an hour
-    per IP.
+    Every method except ``get_format`` requires an API key; without one it
+    raises ``AuthenticationError``. What a key can call follows its plan: a
+    free key covers ``validate`` (100 requests a month, get one at
+    https://ibanchecker.cash/api-docs), ``validate_bulk`` and ``lookup_bic``
+    need the Basic plan or above, and ``extract`` needs the Growth plan or
+    above. A key whose email address has a verified account at
+    https://ibanchecker.cash/dashboard can try the methods its plan lacks
+    (bulk up to 10 IBANs, extraction up to 5,000 characters per call). A call
+    outside the key's plan raises ``APIError`` with status 403 and
+    ``error_code`` ``"PLAN_REQUIRED"``. ``get_format`` also works without a
+    key, limited to 100 requests an hour per IP.
 
     Example::
 
@@ -89,34 +95,47 @@ class IbanChecker:
     def validate(self, iban: str) -> ValidationResult:
         """Validate a single IBAN. Returns a result with ``valid=False`` for a
         malformed IBAN (this is not an error); it raises only on transport,
-        auth, or rate-limit problems."""
+        auth, or rate-limit problems. Works with any key, including a free
+        one, and counts one request."""
         return ValidationResult.from_dict(
             self._request("POST", "/validate", json={"iban": iban})
         )
 
     def validate_bulk(self, ibans: Iterable[str]) -> BatchResult:
         """Validate up to 100 IBANs in one request. Results come back in the
-        same order as the input."""
+        same order as the input.
+
+        Needs a key on the Basic plan or above; a key with a verified account
+        can try it with up to 10 IBANs per call. Counts one request per IBAN."""
         return BatchResult.from_dict(
             self._request("POST", "/validate/bulk", json={"ibans": list(ibans)})
         )
 
     def extract(self, text: str) -> BatchResult:
         """Scan free text (emails, invoices) for IBAN-shaped strings and
-        validate each candidate. Up to 50,000 characters per request."""
+        validate each candidate. Up to 50,000 characters per request.
+
+        Needs a key on the Growth plan or above; a key with a verified account
+        can try it with up to 5,000 characters per call. Counts one request per
+        IBAN found, at least one per call."""
         return BatchResult.from_dict(
             self._request("POST", "/extract", json={"text": text})
         )
 
     def get_format(self, country: str) -> FormatSpec:
         """Return the IBAN format specification for an ISO 3166-1 alpha-2
-        country code (e.g. ``"DE"``)."""
+        country code (e.g. ``"DE"``). The only method that works without a
+        key, limited to 100 requests an hour per IP."""
         return FormatSpec.from_dict(
             self._request("GET", "/formats/{}".format(country.lower()))
         )
 
     def lookup_bic(self, bic: str) -> BankRecord:
-        """Resolve an 8 or 11 character ISO 9362 BIC to a bank record."""
+        """Resolve an 8 or 11 character ISO 9362 BIC to a bank record.
+
+        Requires an API key on the Basic plan or above, or a key with a
+        verified account; it no longer works without a key (the API answers
+        HTTP 401, raised as ``AuthenticationError``). Counts one request."""
         return BankRecord.from_dict(
             self._request("GET", "/swift/{}".format(bic.upper()))
         )
