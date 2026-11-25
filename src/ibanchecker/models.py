@@ -10,6 +10,30 @@ def _filtered(cls, data: Dict[str, Any]) -> Dict[str, Any]:
 
 
 @dataclass
+class BankLogo:
+    """The bank's logo as the ibanchecker.cash result card shows it.
+
+    ``on_light`` is drawn on a light background and ``on_dark`` on a dark one
+    (the same URL when one file reads on both). When
+    ``dark_needs_light_backing`` is true, ``on_dark`` has no dark variant and
+    should sit on a light chip. ``format`` is ``svg``, ``png`` or ``webp``.
+    The logos are the banks' trademarks, provided to identify the bank.
+    """
+
+    on_light: str = ""
+    on_dark: str = ""
+    dark_needs_light_backing: bool = False
+    format: str = ""
+    raw: Dict[str, Any] = field(default_factory=dict, repr=False)
+
+    @classmethod
+    def from_dict(cls, data: Optional[Dict[str, Any]]) -> Optional["BankLogo"]:
+        if not data:
+            return None
+        return cls(raw=data, **_filtered(cls, data))
+
+
+@dataclass
 class ValidationResult:
     """Result of validating a single IBAN.
 
@@ -30,6 +54,7 @@ class ValidationResult:
     bank_type: Optional[str] = None
     bic: Optional[str] = None
     bank_city: Optional[str] = None
+    bank_logo: Optional[BankLogo] = None
     bank_code: Optional[str] = None
     branch_code: Optional[str] = None
     account_number: Optional[str] = None
@@ -44,7 +69,9 @@ class ValidationResult:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "ValidationResult":
-        return cls(raw=data, **_filtered(cls, data))
+        payload = _filtered(cls, data)
+        payload["bank_logo"] = BankLogo.from_dict(data.get("bank_logo"))
+        return cls(raw=data, **payload)
 
     def __bool__(self) -> bool:
         return bool(self.valid)
@@ -130,6 +157,7 @@ class BankRecord:
     location_code: Optional[str] = None
     branch_code: Optional[str] = None
     bank_name: Optional[str] = None
+    bank_logo: Optional[BankLogo] = None
     city: Optional[str] = None
     country_name: Optional[str] = None
     sepa: Optional[bool] = None
@@ -139,4 +167,6 @@ class BankRecord:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "BankRecord":
-        return cls(raw=data, **_filtered(cls, data))
+        payload = _filtered(cls, data)
+        payload["bank_logo"] = BankLogo.from_dict(data.get("bank_logo"))
+        return cls(raw=data, **payload)

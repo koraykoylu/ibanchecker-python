@@ -4,6 +4,7 @@ import pytest
 
 from ibanchecker import (
     AuthenticationError,
+    BankLogo,
     IbanChecker,
     NotFoundError,
     RateLimitError,
@@ -190,3 +191,50 @@ def test_auth_error_raises():
     session = make_session(401, {"error": "bad key", "error_code": "UNAUTHORIZED"})
     with pytest.raises(AuthenticationError):
         IbanChecker(api_key="bad", session=session).validate("x")
+
+
+def test_validate_carries_the_bank_logo():
+    session = make_session(
+        200,
+        {
+            "valid": True,
+            "iban": "DE89370400440532013000",
+            "bic": "COBADEFFXXX",
+            "bank_logo": {
+                "on_light": "https://logos.ibanchecker.cash/logos/COBADEFF-dark.svg",
+                "on_dark": "https://logos.ibanchecker.cash/logos/COBADEFF-light.svg",
+                "dark_needs_light_backing": False,
+                "format": "svg",
+            },
+        },
+    )
+    result = IbanChecker(session=session).validate("DE89370400440532013000")
+    assert isinstance(result.bank_logo, BankLogo)
+    assert result.bank_logo.on_dark.endswith("COBADEFF-light.svg")
+    assert result.bank_logo.dark_needs_light_backing is False
+    assert result.bank_logo.format == "svg"
+
+
+def test_a_bank_without_a_logo_has_none():
+    session = make_session(200, {"valid": True, "iban": "TR330006100519786457841326", "bank_logo": None})
+    assert IbanChecker(session=session).validate("TR330006100519786457841326").bank_logo is None
+    session = make_session(200, {"valid": True, "iban": "TR330006100519786457841326"})
+    assert IbanChecker(session=session).validate("TR330006100519786457841326").bank_logo is None
+
+
+def test_lookup_bic_carries_the_bank_logo():
+    session = make_session(
+        200,
+        {
+            "bic": "CFTEMTM1",
+            "bank_name": "OpenPayd Financial Services Malta Limited",
+            "bank_logo": {
+                "on_light": "https://logos.ibanchecker.cash/logos/CFTEMTM1-site.svg",
+                "on_dark": "https://logos.ibanchecker.cash/logos/CFTEMTM1-site-w.svg",
+                "dark_needs_light_backing": False,
+                "format": "svg",
+            },
+        },
+    )
+    bank = IbanChecker(session=session).lookup_bic("CFTEMTM1")
+    assert bank.bank_logo.on_light.endswith("CFTEMTM1-site.svg")

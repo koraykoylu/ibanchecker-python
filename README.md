@@ -107,6 +107,16 @@ bank = client.lookup_bic("DEUTDEFF")
 print(bank.bank_name, bank.city)        # 'Deutsche Bank AG Frankfurt' 'FRANKFURT AM MAIN'
 ```
 
+### Bank logo
+
+`result.bank_logo` and `bank.bank_logo` are a `BankLogo`, or `None` when no verified logo is held for the bank. It carries the mark the ibanchecker.cash result card shows: a file for light backgrounds, a file for dark backgrounds (the same URL when one file reads on both), whether the dark file needs a light chip behind it, and the format (`svg`, `png` or `webp`). Every logo is checked by hand against the bank's current mark, so not every bank has one yet; the field is empty then. The logos are the banks' trademarks, provided to identify the bank.
+
+```python
+if result.bank_logo:
+    print(result.bank_logo.on_light, result.bank_logo.on_dark)
+    print(result.bank_logo.dark_needs_light_backing, result.bank_logo.format)
+```
+
 ## Error handling
 
 A malformed IBAN is **not** an exception: `validate()` returns a `ValidationResult` with `valid=False`. Exceptions are raised only for transport, authentication (including a missing key on any method except `get_format`), plan, and rate-limit or quota problems:

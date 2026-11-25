@@ -14,6 +14,7 @@ from .errors import (
     RateLimitError,
 )
 from .models import (
+    BankLogo,
     BankRecord,
     BatchResult,
     BbanField,
@@ -29,6 +30,7 @@ __all__ = [
     "FormatSpec",
     "BbanField",
     "BankRecord",
+    "BankLogo",
     "IbanCheckerError",
     "BadRequestError",
     "AuthenticationError",
