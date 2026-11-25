@@ -11,15 +11,15 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    # The runner image drops old Pythons (3.8 is gone from Ubuntu 26.04), so
+    # each version runs in its own official image instead.
+    container: python:${{ matrix.python-version }}-slim
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.8", "3.11", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
       - run: python -m pip install --upgrade pip
       - run: python -m pip install -e ".[dev]"
       - run: python -m pytest tests -q
